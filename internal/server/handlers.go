@@ -27,18 +27,6 @@ import (
 
 var JSONEncodingError = errors.New("Error converting exif to JSON")
 
-var signOut = func(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
-		w.Header().Set("Content-Type", "application/json")
-		http.SetCookie(w, &http.Cookie{
-			Name:   "user_token",
-			Value:  "",
-			MaxAge: 0,
-		})
-		http.Redirect(w, r, "/login", http.StatusFound)
-	}
-}
-
 // Credentials for at user to get JWT
 type Credentials struct {
 	Email    string `json:"email,omitempty"`

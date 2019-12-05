@@ -62,8 +62,6 @@ func NewServer() *Server {
 		}
 	})).Methods("GET")
 
-	mux.HandleFunc("/logoff", signOut).Methods("POST")
-
 	mux.HandleFunc("/mail/send", isAuth(sendMail)).Methods("POST")
 	mux.HandleFunc("/exif/image", isAuth(exifImages)).Methods("POST")
 	mux.HandleFunc("/exif/video", isAuth(exifVideo)).Methods("POST")
