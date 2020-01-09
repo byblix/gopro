@@ -26,7 +26,7 @@ const (
 	EOFError   = "error reading exif from file: EOF"
 )
 
-type imgExifData struct {
+type MetaData struct {
 	x *goexif.Exif
 }
 
@@ -97,16 +97,16 @@ func DecodeImageMetadata(data []byte) (*exif.Output, error) {
 }
 
 // loadExifData request exif data for image
-func loadExifData(r io.Reader) (*imgExifData, error) {
+func loadExifData(r io.Reader) (*MetaData, error) {
 	x, err := goexif.Decode(r)
 	if err != nil {
 		err := errors.Wrap(err, "loading exif error")
 		return nil, err
 	}
-	return &imgExifData{x}, nil
+	return &MetaData{x}, nil
 }
 
-func (e *imgExifData) calcGeoCoordinate(fieldName goexif.FieldName) (float64, error) {
+func (e *MetaData) calcGeoCoordinate(fieldName goexif.FieldName) (float64, error) {
 	tag, err := e.x.Get(fieldName)
 	if err != nil {
 		return 0.0, errors.WithMessagef(err, "error getting location coordinates from %s", fieldName)
@@ -127,7 +127,7 @@ func (e *imgExifData) calcGeoCoordinate(fieldName goexif.FieldName) (float64, er
 	return res, nil
 }
 
-func (e *imgExifData) getDateTime() (d int64, err error) {
+func (e *MetaData) getDateTime() (d int64, err error) {
 	t, err := e.x.DateTime()
 	if err != nil {
 		return d, err
@@ -136,7 +136,7 @@ func (e *imgExifData) getDateTime() (d int64, err error) {
 	return d, nil
 }
 
-func (e *imgExifData) getCopyright() (author string, err error) {
+func (e *MetaData) getCopyright() (author string, err error) {
 	tag, err := e.x.Get(goexif.Copyright)
 	if err != nil {
 		return author, err
@@ -144,7 +144,7 @@ func (e *imgExifData) getCopyright() (author string, err error) {
 	return tag.StringVal()
 }
 
-func (e *imgExifData) getCameraModel() (model string, err error) {
+func (e *MetaData) getCameraModel() (model string, err error) {
 	n := goexif.FieldName(goexif.Model)
 	tag, err := e.x.Get(n)
 	if err != nil {
@@ -153,7 +153,7 @@ func (e *imgExifData) getCameraModel() (model string, err error) {
 	return tag.StringVal()
 }
 
-func (e *imgExifData) getImageDimensions() (map[goexif.FieldName]int, error) {
+func (e *MetaData) getImageDimensions() (map[goexif.FieldName]int, error) {
 	var fNames = []goexif.FieldName{goexif.PixelXDimension, goexif.PixelYDimension}
 	var fNameVal = make(map[goexif.FieldName]int, len(fNames))
 	for _, n := range fNames {
@@ -171,7 +171,7 @@ func (e *imgExifData) getImageDimensions() (map[goexif.FieldName]int, error) {
 }
 
 // get file size
-func (e *imgExifData) getFileSize(r io.Reader) (float64, error) {
+func (e *MetaData) getFileSize(r io.Reader) (float64, error) {
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
 		return 0, err
@@ -187,7 +187,7 @@ func (e *imgExifData) getFileSize(r io.Reader) (float64, error) {
 
 // get image fmt
 // ! switch between image and video - evt create struct input
-func (e *imgExifData) getMediaFmt(r io.Reader) (fmt string, err error) {
+func (e *MetaData) getMediaFmt(r io.Reader) (fmt string, err error) {
 	// _, fmt, err = image.DecodeConfig(r)
 	// if err != nil {
 	// 	log.Errorln(err)
