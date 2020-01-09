@@ -14,11 +14,11 @@ import (
 var (
 	local      = flag.Bool("local", false, "Do you want to run go run *.go with .env local file?")
 	production = flag.Bool("production", false, "Is it production?")
+	startdb    = flag.Bool("startdb", true, "Start with DB connection")
 	log        = logger.NewLogger()
 )
 
 func init() {
-	// type go run *.go -local
 	flag.Parse()
 
 	if *local && !*production {
@@ -30,15 +30,16 @@ func init() {
 }
 
 func main() {
-
 	s := server.NewServer()
 
 	if err := s.UseHTTP2(); err != nil {
 		log.Warnf("Error with HTTP2 %s", err)
 	}
 
-	if err := s.InitDB(); err != nil {
-		log.Fatalf("Error initializing DB %s", err)
+	if *startdb {
+		if err := s.InitDB(); err != nil {
+			log.Fatalf("Error initializing DB %s", err)
+		}
 	}
 
 	s.HttpListenServer.Addr = ":3000"
@@ -47,7 +48,6 @@ func main() {
 	if err := s.HttpListenServer.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
-
 	// * runs until os.SIGTERM happens
 	s.WaitForShutdown()
 }

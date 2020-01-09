@@ -10,14 +10,15 @@ import (
 	"syscall"
 	"time"
 
-	storage "github.com/blixenkrone/gopro/internal/storage"
-	firebase "github.com/blixenkrone/gopro/internal/storage/firebase"
-	"github.com/blixenkrone/gopro/internal/storage/postgres"
-	"github.com/blixenkrone/gopro/pkg/logger"
 	mux "github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/net/http2"
+
+	storage "github.com/blixenkrone/gopro/internal/storage"
+	firebase "github.com/blixenkrone/gopro/internal/storage/firebase"
+	"github.com/blixenkrone/gopro/internal/storage/postgres"
+	"github.com/blixenkrone/gopro/pkg/logger"
 )
 
 var (
@@ -67,7 +68,6 @@ func NewServer() *Server {
 	mux.HandleFunc("/mail/send", isAuth(sendMail)).Methods("POST")
 	mux.HandleFunc("/exif/image", isAuth(exifImages)).Methods("POST")
 	mux.HandleFunc("/exif/video", isAuth(exifVideo)).Methods("POST")
-	mux.HandleFunc("/upload/byrd", uploadByrdAPIRequest).Methods("POST")
 
 	mux.HandleFunc("/profiles", isAuth(getProfiles)).Methods("GET")
 	mux.HandleFunc("/profile/{id}", isAuth(getProfileByID)).Methods("GET")
@@ -75,16 +75,17 @@ func NewServer() *Server {
 	mux.HandleFunc("/auth/profile/token", isAuth(decodeTokenGetProfile)).Methods("GET")
 	mux.HandleFunc("/profile/{id}", isAuth(getProProfile)).Methods("GET")
 
-	mux.HandleFunc("/booking/{uid}", isAuth(getBookingsByUID)).Methods("GET")
-	mux.HandleFunc("/booking/{proUID}", isAuth(createBooking)).Methods("POST")
-	mux.HandleFunc("/booking/{bookingID}", isAuth(updateBooking)).Methods("PUT")
-	mux.HandleFunc("/booking/{bookingID}", isAuth(deleteBooking)).Methods("DELETE")
-	mux.HandleFunc("/bookings" /** isAdmin() middleware? */, isAuth(getProfileWithBookings)).Methods("GET")
+	mux.HandleFunc("/booking/upload", isAuth(bookingUploadToStorage)).Methods("POST")
+	mux.HandleFunc("/booking/task/{uid}", isAuth(getBookingsByUID)).Methods("GET")
+	mux.HandleFunc("/booking/task/{proUID}", isAuth(createBooking)).Methods("POST")
+	mux.HandleFunc("/booking/task/{bookingID}", isAuth(updateBooking)).Methods("PUT")
+	mux.HandleFunc("/booking/task/{bookingID}", isAuth(deleteBooking)).Methods("DELETE")
+	mux.HandleFunc("/booking/task" /** isAdmin() middleware? */, isAuth(getProfileWithBookings)).Methods("GET")
 
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{"http://localhost:4200", "http://localhost:4201", "http://localhost", "https://pro.development.byrd.news", "https://pro.dev.byrd.news", "https://pro.byrd.news"},
 		AllowedMethods: []string{"GET", "PUT", "POST", "DELETE", "OPTIONS"},
-		AllowedHeaders: []string{"Content-Type", "Accept", "Content-Length", "X-Requested-By", "user_token"},
+		AllowedHeaders: []string{"Content-Type", "Accept", "Content-Length", "X-Requested-By", "user_token", "preview"},
 		// AllowCredentials: true,
 	})
 
